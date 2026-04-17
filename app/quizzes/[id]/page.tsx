@@ -2,10 +2,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function QuizDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const { data: session } = useSession();
   const [quiz, setQuiz] = useState<any>(null);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [myAttempts, setMyAttempts] = useState(0);
@@ -72,21 +74,23 @@ export default function QuizDetailPage() {
         </div>
       )}
 
-      <section>
-        <h2 className="text-lg font-semibold mb-2">Rate this quiz</h2>
-        <div className="flex gap-1 text-2xl">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <button
-              key={s}
-              onClick={() => rate(s)}
-              className={s <= stars ? "text-[var(--accent)]" : "text-[var(--muted)]"}
-            >
-              ★
-            </button>
-          ))}
-        </div>
-        {msg && <p className="text-sm text-[var(--muted)] mt-1">{msg}</p>}
-      </section>
+      {session && quiz.author_id !== (session.user as any)?.id && (
+        <section>
+          <h2 className="text-lg font-semibold mb-2">Rate this quiz</h2>
+          <div className="flex gap-1 text-2xl">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <button
+                key={s}
+                onClick={() => rate(s)}
+                className={s <= stars ? "text-[var(--accent)]" : "text-[var(--muted)]"}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+          {msg && <p className="text-sm text-[var(--muted)] mt-1">{msg}</p>}
+        </section>
+      )}
 
       <section>
         <h2 className="text-lg font-semibold mb-3">Top 10 on this quiz</h2>

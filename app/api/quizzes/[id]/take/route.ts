@@ -34,10 +34,6 @@ export async function POST(
   if (q.status !== "published") {
     return NextResponse.json({ error: "Quiz is not takeable" }, { status: 409 });
   }
-  // Owner cannot take their own quiz (gamification integrity)
-  if (q.author_id === ctx.userId) {
-    return NextResponse.json({ error: "Cannot take your own quiz" }, { status: 409 });
-  }
 
   // Parse the stored quiz (already validated on import, but be defensive)
   const parsed = QuizSchema.safeParse({

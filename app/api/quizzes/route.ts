@@ -10,6 +10,7 @@ import { ZodError } from "zod";
 export async function GET(req: NextRequest) {
   const ctx = await requireUser();
   const mine = req.nextUrl.searchParams.get("mine") === "1";
+  const excludeMine = req.nextUrl.searchParams.get("excludeMine") === "1";
   const sort = req.nextUrl.searchParams.get("sort") ?? "recent";
 
   let query = ctx.client
@@ -22,6 +23,9 @@ export async function GET(req: NextRequest) {
     query = query.eq("author_id", ctx.userId);
   } else {
     query = query.eq("status", "published");
+    if (excludeMine) {
+      query = query.neq("author_id", ctx.userId);
+    }
   }
 
   switch (sort) {
