@@ -63,7 +63,7 @@ export async function PATCH(
     quiz = parseQuiz(body.quiz);
   } catch (e) {
     if (e instanceof ZodError) {
-      return NextResponse.json({ error: "Validation failed", issues: e.errors }, { status: 400 });
+      return NextResponse.json({ error: "Validation failed", issues: e.issues }, { status: 400 });
     }
     return NextResponse.json({ error: "Invalid quiz" }, { status: 400 });
   }
