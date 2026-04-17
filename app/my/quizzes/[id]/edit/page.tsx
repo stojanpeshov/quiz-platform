@@ -49,7 +49,7 @@ export default function EditDraftPage() {
       <textarea
         value={json}
         onChange={(e) => setJson(e.target.value)}
-        className="w-full h-96 bg-[var(--card)] border border-[var(--border)] rounded p-3 font-mono text-sm"
+        className="w-full h-64 sm:h-96 bg-[var(--card)] border border-[var(--border)] rounded p-3 font-mono text-sm"
       />
       {error && <pre className="text-red-400 text-xs whitespace-pre-wrap">{error}</pre>}
       <div className="flex gap-3">

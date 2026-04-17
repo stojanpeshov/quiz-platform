@@ -23,7 +23,7 @@ export default function AdminQuizzesPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">All quizzes</h1>
-      <table className="w-full text-sm">
+      <div className="overflow-x-auto"><table className="w-full text-sm">
         <thead className="text-[var(--muted)]">
           <tr>
             <th className="text-left py-2">Title</th>
@@ -49,7 +49,7 @@ export default function AdminQuizzesPage() {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
     </div>
   );
 }

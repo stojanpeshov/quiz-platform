@@ -36,6 +36,7 @@ export default function LeaderboardsPage() {
       </div>
 
       {view === "global" && (
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-[var(--muted)]">
             <tr><th className="text-left py-2">#</th><th className="text-left">User</th><th className="text-right">Points</th></tr>
@@ -50,9 +51,11 @@ export default function LeaderboardsPage() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
 
       {(view === "best_rated" || view === "most_taken") && (
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-[var(--muted)]">
             <tr>
@@ -75,6 +78,7 @@ export default function LeaderboardsPage() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

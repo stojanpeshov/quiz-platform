@@ -55,7 +55,7 @@ export default function QuizDetailPage() {
         </div>
         <h1 className="text-3xl font-bold">{quiz.title}</h1>
         <p className="text-[var(--muted)] mt-2">{quiz.description}</p>
-        <div className="flex gap-4 text-sm text-[var(--muted)] mt-3">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[var(--muted)] mt-3">
           {quiz.author_name && <span>by {quiz.author_name}</span>}
           <span>{quiz.question_count} questions</span>
           <span>★ {quiz.avg_rating?.toFixed?.(1) ?? "–"} ({quiz.rating_count})</span>
@@ -97,7 +97,7 @@ export default function QuizDetailPage() {
         {leaderboard.length === 0 ? (
           <p className="text-[var(--muted)] text-sm">No attempts yet. Be the first.</p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full text-sm">
             <thead className="text-[var(--muted)]">
               <tr>
                 <th className="text-left py-2">#</th>
@@ -116,7 +116,7 @@ export default function QuizDetailPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </section>
     </div>

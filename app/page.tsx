@@ -65,7 +65,7 @@ export default function Home() {
     <div className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Welcome Header with Points */}
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold" style={{ color: "var(--fg)" }}>
               Welcome back, {session.user?.name?.split(" ")[0]}!
@@ -89,7 +89,7 @@ export default function Home() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
           <Link
             href="/quizzes/new"
             className="rounded-lg p-6 shadow-lg transition-all hover:shadow-xl hover:opacity-90"
@@ -237,7 +237,7 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {myQuizzes.slice(0, 6).map((quiz) => (
                 <Link
                   key={quiz.id}

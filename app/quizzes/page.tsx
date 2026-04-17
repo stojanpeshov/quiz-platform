@@ -113,7 +113,7 @@ export default function QuizzesPage() {
                     </p>
                   )}
                 </div>
-                <div className="text-right text-xs text-[var(--muted)] shrink-0">
+                <div className="hidden sm:block text-right text-xs text-[var(--muted)] shrink-0">
                   <div>{q.question_count} questions</div>
                   <div>★ {q.avg_rating.toFixed(1)} ({q.rating_count})</div>
                   <div>{q.attempt_count} attempts</div>

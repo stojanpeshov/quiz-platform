@@ -27,9 +27,9 @@ export default function AdminHome() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-2xl font-bold">Admin dashboard</h1>
-        <div className="flex gap-2 text-sm">
+        <div className="flex flex-wrap gap-2 text-sm">
           <Link href="/admin/users" className="px-3 py-1 border border-[var(--border)] rounded">Users</Link>
           <Link href="/admin/quizzes" className="px-3 py-1 border border-[var(--border)] rounded">Quizzes</Link>
           <Link href="/admin/events" className="px-3 py-1 border border-[var(--border)] rounded">Events</Link>

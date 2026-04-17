@@ -34,7 +34,7 @@ export default function AdminUsersPage() {
         />
         <button onClick={load} className="px-3 py-1 border border-[var(--border)] rounded text-sm">Search</button>
       </div>
-      <table className="w-full text-sm">
+      <div className="overflow-x-auto"><table className="w-full text-sm">
         <thead className="text-[var(--muted)]">
           <tr>
             <th className="text-left py-2">Name / Email</th>
@@ -63,7 +63,7 @@ export default function AdminUsersPage() {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
     </div>
   );
 }

@@ -27,7 +27,7 @@ export default function AdminEventsPage() {
           <option key={t} value={t}>{t || "All types"}</option>
         ))}
       </select>
-      <table className="w-full text-sm">
+      <div className="overflow-x-auto"><table className="w-full text-sm">
         <thead className="text-[var(--muted)]">
           <tr>
             <th className="text-left py-2">When</th>
@@ -48,7 +48,7 @@ export default function AdminEventsPage() {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
     </div>
   );
 }
