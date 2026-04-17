@@ -36,12 +36,19 @@ export async function GET(
     questions: data.questions,
   };
 
+  const { data: myRating } = await ctx.client
+    .from("ratings")
+    .select("stars")
+    .eq("quiz_id", id)
+    .eq("user_id", ctx.userId)
+    .maybeSingle();
+
   const payload =
     isOwner || isAdmin
       ? { ...data, author_name: data.users?.name }
       : { ...data, author_name: data.users?.name, questions: (stripAnswers(quizObj as any) as any).questions };
 
-  return NextResponse.json({ quiz: payload });
+  return NextResponse.json({ quiz: payload, myRating: myRating?.stars ?? 0 });
 }
 
 /**

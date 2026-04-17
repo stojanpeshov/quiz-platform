@@ -15,7 +15,10 @@ export default function QuizDetailPage() {
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
-    fetch(`/api/quizzes/${params.id}`).then((r) => r.json()).then((d) => setQuiz(d.quiz));
+    fetch(`/api/quizzes/${params.id}`).then((r) => r.json()).then((d) => {
+      setQuiz(d.quiz);
+      if (d.myRating) setStars(d.myRating);
+    });
     fetch(`/api/leaderboards?view=per_quiz&quizId=${params.id}`)
       .then((r) => r.json())
       .then((d) => setLeaderboard(d.rows ?? []));
