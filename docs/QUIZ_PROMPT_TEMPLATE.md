@@ -24,7 +24,7 @@ Output **ONLY valid JSON** matching this exact schema. No prose, no explanations
       "options": ["..."],
       "correctAnswer": <index|bool|string>,
       "correctAnswers": [<indices>],
-      "explanation": "string (optional)"
+      "explanation": "string (required)"
     }
   ]
 }

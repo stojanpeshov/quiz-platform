@@ -37,6 +37,7 @@ export default function NewQuizPage() {
   const [json, setJson] = useState(EXAMPLE);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   async function submit() {
     setError("");
@@ -60,6 +61,41 @@ export default function NewQuizPage() {
       return setError(`${data.error}\n${detail}`);
     }
     router.push(`/my/quizzes/${data.id}/edit`);
+  }
+
+  const TEMPLATE_TEXT = `Output **ONLY valid JSON** matching this exact schema. No prose, no explanations, no markdown fences — just the raw JSON object.
+
+## Schema
+
+json:
+{
+  "title": "string (3–120 chars)",
+  "description": "string (0–500 chars)",
+  "difficulty": "beginner" | "intermediate" | "advanced",
+  "questions": [
+    {
+      "type": "single_choice" | "multiple_choice" | "true_false" | "short_text",
+      "question": "string (required)",
+      "options": ["..."],
+      "correctAnswer": <index|bool|string>,
+      "correctAnswers": [<indices>],
+      "explanation": "string (required)"
+    }
+  ]
+}
+
+## Per-type rules
+
+- **single_choice**: include "options" (2–6 strings) and "correctAnswer" as the zero-based index of the correct option. Do NOT include "correctAnswers".
+- **multiple_choice**: include "options" and "correctAnswers" as an array of zero-based indices (at least 1). Do NOT include "correctAnswer".
+- **true_false**: omit "options". "correctAnswer" must be the boolean "true" or "false".
+- **short_text**: omit "options". "correctAnswer" must be a short string (matching is case-insensitive, whitespace-normalized).`;
+
+  function copyTemplate() {
+    navigator.clipboard.writeText(TEMPLATE_TEXT).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   }
 
   return (
@@ -91,38 +127,21 @@ export default function NewQuizPage() {
           <summary className="cursor-pointer font-medium mb-2" style={{ color: "var(--accent)" }}>
             Show JSON template part for your AI prompt (copy paste to your prompt)
           </summary>
-          <pre
-            className="text-xs p-3 rounded overflow-x-auto mt-2"
-            style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-          >
-{`Output **ONLY valid JSON** matching this exact schema. No prose, no explanations, no markdown fences — just the raw JSON object.
-
-## Schema
-
-json:
-{
-  "title": "string (3–120 chars)",
-  "description": "string (0–500 chars)",
-  "difficulty": "beginner" | "intermediate" | "advanced",
-  "questions": [
-    {
-      "type": "single_choice" | "multiple_choice" | "true_false" | "short_text",
-      "question": "string (required)",
-      "options": ["..."],
-      "correctAnswer": <index|bool|string>,
-      "correctAnswers": [<indices>],
-      "explanation": "string (optional)"
-    }
-  ]
-}
-
-## Per-type rules
-
-- **single_choice**: include "options" (2–6 strings) and "correctAnswer" as the zero-based index of the correct option. Do NOT include "correctAnswers".
-- **multiple_choice**: include "options" and "correctAnswers" as an array of zero-based indices (at least 1). Do NOT include "correctAnswer".
-- **true_false**: omit "options". "correctAnswer" must be the boolean "true" or "false".
-- **short_text**: omit "options". "correctAnswer" must be a short string (matching is case-insensitive, whitespace-normalized).`}
-          </pre>
+          <div className="relative mt-2">
+            <button
+              onClick={copyTemplate}
+              className="absolute top-2 right-2 px-3 py-1 text-xs rounded hover:opacity-80"
+              style={{ background: "var(--accent)", color: "black" }}
+            >
+              {copied ? "✓ Copied!" : "Copy"}
+            </button>
+            <pre
+              className="text-xs p-3 rounded overflow-x-auto pr-24"
+              style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+            >
+              {TEMPLATE_TEXT}
+            </pre>
+          </div>
         </details>
 
         <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
@@ -138,9 +157,8 @@ json:
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-3 py-1 rounded border ${
-              tab === t ? "border-[var(--accent)] text-[var(--accent)]" : "border-[var(--border)]"
-            }`}
+            className={`px-3 py-1 rounded border ${tab === t ? "border-[var(--accent)] text-[var(--accent)]" : "border-[var(--border)]"
+              }`}
           >
             {t === "json" ? "Paste JSON" : "Build manually"}
           </button>
