@@ -64,13 +64,68 @@ export default function NewQuizPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Create a new quiz</h1>
-      <p className="text-[var(--muted)] text-sm">
-        Start as a draft. Nothing is public until you publish. See{" "}
-        <a href="/docs/QUIZ_PROMPT_TEMPLATE.md" className="text-[var(--accent)] underline">
-          the prompt template
-        </a>{" "}
-        to generate a quiz from any LLM.
-      </p>
+
+      {/* Info Box */}
+      <div
+        className="rounded-lg p-4 border"
+        style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+      >
+        <h3 className="font-semibold mb-2" style={{ color: "var(--accent)" }}>
+          💡 Try a quick AI self-check
+        </h3>
+        <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
+          Use your favorite AI tool (ChatGPT, Claude, Copilot, Gemini) to create a quiz from your course materials.
+        </p>
+
+        <div className="text-sm space-y-2 mb-3" style={{ color: "var(--fg)" }}>
+          <p className="font-medium">What to include in your prompt:</p>
+          <ul className="list-disc list-inside space-y-1 ml-2" style={{ color: "var(--muted)" }}>
+            <li>The course link or list of materials you completed</li>
+            <li>Difficulty level of the questions (beginner, intermediate, advanced)</li>
+            <li>Number of questions (e.g., 5 or 20)</li>
+          </ul>
+        </div>
+
+        <details className="text-sm">
+          <summary className="cursor-pointer font-medium mb-2" style={{ color: "var(--accent)" }}>
+            Show JSON schema for your AI prompt
+          </summary>
+          <pre
+            className="text-xs p-3 rounded overflow-x-auto mt-2"
+            style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+          >
+{`Ask your AI to output ONLY valid JSON matching this schema:
+
+{
+  "title": "Your Quiz Title",
+  "description": "Brief description",
+  "questions": [
+    {
+      "type": "single_choice",
+      "question": "Question text?",
+      "options": ["Option A", "Option B", "Option C"],
+      "correctAnswer": 0,
+      "explanation": "Why this is correct (optional)"
+    },
+    {
+      "type": "true_false",
+      "question": "True or false question?",
+      "correctAnswer": true
+    }
+  ]
+}
+
+Question types: single_choice, multiple_choice, true_false, short_text`}
+          </pre>
+        </details>
+
+        <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+          <p className="text-xs" style={{ color: "var(--muted)" }}>
+            <strong>How it works:</strong> Copy the JSON output from your AI → Paste below → Click "Save as draft" →
+            Review & edit → Publish when ready. Your quiz starts as a draft—nothing is public until you publish.
+          </p>
+        </div>
+      </div>
 
       <div className="flex gap-2 text-sm">
         {(["json", "form"] as const).map((t) => (
@@ -88,10 +143,14 @@ export default function NewQuizPage() {
 
       {tab === "json" ? (
         <div>
+          <label className="block text-sm font-medium mb-2" style={{ color: "var(--muted)" }}>
+            Paste your quiz JSON here (sample provided below - replace with your own)
+          </label>
           <textarea
             value={json}
             onChange={(e) => setJson(e.target.value)}
             className="w-full h-96 bg-[var(--card)] border border-[var(--border)] rounded p-3 font-mono text-sm"
+            placeholder="Paste your quiz JSON here..."
           />
           {error && <pre className="text-red-400 text-xs mt-2 whitespace-pre-wrap">{error}</pre>}
           <button
