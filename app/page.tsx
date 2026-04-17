@@ -9,6 +9,7 @@ interface Quiz {
   id: string;
   title: string;
   description: string;
+  difficulty?: string;
   status: string;
   question_count: number;
   avg_rating: number;
@@ -249,14 +250,29 @@ export default function Home() {
                   style={{ border: "1px solid var(--border)" }}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <h3
-                      className="font-semibold line-clamp-2"
-                      style={{ color: "var(--fg)" }}
-                    >
-                      {quiz.title}
-                    </h3>
+                    <div className="flex-1 min-w-0">
+                      <h3
+                        className="font-semibold line-clamp-2"
+                        style={{ color: "var(--fg)" }}
+                      >
+                        {quiz.title}
+                      </h3>
+                      {quiz.difficulty && (
+                        <span
+                          className={`inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded ${
+                            quiz.difficulty === "beginner"
+                              ? "bg-green-900 text-green-300"
+                              : quiz.difficulty === "advanced"
+                              ? "bg-red-900 text-red-300"
+                              : "bg-blue-900 text-blue-300"
+                          }`}
+                        >
+                          {quiz.difficulty}
+                        </span>
+                      )}
+                    </div>
                     <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      className={`ml-2 px-2 py-1 text-xs font-medium rounded-full shrink-0 ${
                         quiz.status === "published"
                           ? "bg-green-900 text-green-300"
                           : quiz.status === "draft"

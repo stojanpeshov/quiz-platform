@@ -16,6 +16,7 @@ Output **ONLY valid JSON** matching this exact schema. No prose, no explanations
 {
   "title": "string (3–120 chars)",
   "description": "string (0–500 chars)",
+  "difficulty": "beginner" | "intermediate" | "advanced",
   "questions": [
     {
       "type": "single_choice" | "multiple_choice" | "true_false" | "short_text",

@@ -6,6 +6,7 @@ const EXAMPLE = JSON.stringify(
   {
     title: "Prompt Engineering Basics",
     description: "Sample quiz based on Anthropic Academy module 1",
+    difficulty: "intermediate",
     questions: [
       {
         type: "single_choice",
@@ -88,34 +89,39 @@ export default function NewQuizPage() {
 
         <details className="text-sm">
           <summary className="cursor-pointer font-medium mb-2" style={{ color: "var(--accent)" }}>
-            Show JSON schema for your AI prompt
+            Show JSON template part for your AI prompt (copy paste to your prompt)
           </summary>
           <pre
             className="text-xs p-3 rounded overflow-x-auto mt-2"
             style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
           >
-{`Ask your AI to output ONLY valid JSON matching this schema:
+{`Output **ONLY valid JSON** matching this exact schema. No prose, no explanations, no markdown fences — just the raw JSON object.
 
+## Schema
+
+json:
 {
-  "title": "Your Quiz Title",
-  "description": "Brief description",
+  "title": "string (3–120 chars)",
+  "description": "string (0–500 chars)",
+  "difficulty": "beginner" | "intermediate" | "advanced",
   "questions": [
     {
-      "type": "single_choice",
-      "question": "Question text?",
-      "options": ["Option A", "Option B", "Option C"],
-      "correctAnswer": 0,
-      "explanation": "Why this is correct (optional)"
-    },
-    {
-      "type": "true_false",
-      "question": "True or false question?",
-      "correctAnswer": true
+      "type": "single_choice" | "multiple_choice" | "true_false" | "short_text",
+      "question": "string (required)",
+      "options": ["..."],
+      "correctAnswer": <index|bool|string>,
+      "correctAnswers": [<indices>],
+      "explanation": "string (optional)"
     }
   ]
 }
 
-Question types: single_choice, multiple_choice, true_false, short_text`}
+## Per-type rules
+
+- **single_choice**: include "options" (2–6 strings) and "correctAnswer" as the zero-based index of the correct option. Do NOT include "correctAnswers".
+- **multiple_choice**: include "options" and "correctAnswers" as an array of zero-based indices (at least 1). Do NOT include "correctAnswer".
+- **true_false**: omit "options". "correctAnswer" must be the boolean "true" or "false".
+- **short_text**: omit "options". "correctAnswer" must be a short string (matching is case-insensitive, whitespace-normalized).`}
           </pre>
         </details>
 

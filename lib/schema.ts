@@ -55,6 +55,7 @@ export const QuestionSchema = z.discriminatedUnion("type", [
 export const QuizSchema = z.object({
   title: z.string().min(3).max(120),
   description: z.string().max(500),
+  difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
   questions: z.array(QuestionSchema).min(1).max(50),
 });
 

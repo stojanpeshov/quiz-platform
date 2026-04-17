@@ -102,8 +102,28 @@ export default function TakeQuizPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">{quiz.title}</h1>
-      <p className="text-[var(--muted)] text-sm">You have up to 3 attempts. Best score counts.</p>
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <h1 className="text-2xl font-bold">{quiz.title}</h1>
+          {quiz.difficulty && (
+            <span
+              className={`px-2 py-0.5 text-xs font-medium rounded ${
+                quiz.difficulty === "beginner"
+                  ? "bg-green-900 text-green-300"
+                  : quiz.difficulty === "advanced"
+                  ? "bg-red-900 text-red-300"
+                  : "bg-blue-900 text-blue-300"
+              }`}
+            >
+              {quiz.difficulty}
+            </span>
+          )}
+        </div>
+        {quiz.author_name && (
+          <p className="text-xs text-[var(--muted)] mb-2">by {quiz.author_name}</p>
+        )}
+        <p className="text-[var(--muted)] text-sm">You have up to 3 attempts. Best score counts.</p>
+      </div>
 
       {quiz.questions.map((q: Question, i: number) => (
         <div key={i} className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">

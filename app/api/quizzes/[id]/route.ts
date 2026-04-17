@@ -15,7 +15,7 @@ export async function GET(
   const ctx = await requireUser();
   const { data, error } = await ctx.client
     .from("quizzes")
-    .select("*")
+    .select("*, users!author_id(name)")
     .eq("id", id)
     .maybeSingle();
 
@@ -38,8 +38,8 @@ export async function GET(
 
   const payload =
     isOwner || isAdmin
-      ? { ...data }
-      : { ...data, questions: (stripAnswers(quizObj as any) as any).questions };
+      ? { ...data, author_name: data.users?.name }
+      : { ...data, author_name: data.users?.name, questions: (stripAnswers(quizObj as any) as any).questions };
 
   return NextResponse.json({ quiz: payload });
 }
@@ -88,6 +88,7 @@ export async function PATCH(
     .update({
       title: quiz.title,
       description: quiz.description,
+      difficulty: quiz.difficulty || "intermediate",
       questions: quiz.questions,
       question_count: quiz.questions.length,
     })

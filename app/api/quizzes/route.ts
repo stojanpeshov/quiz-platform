@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   let query = ctx.client
     .from("quizzes")
     .select(
-      "id, title, description, author_id, question_count, avg_rating, rating_count, attempt_count, status, published_at, created_at"
+      "id, title, description, difficulty, author_id, question_count, avg_rating, rating_count, attempt_count, status, published_at, created_at, users!author_id(name)"
     );
 
   if (mine) {
@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
       author_id: ctx.userId,
       title: quiz.title,
       description: quiz.description,
+      difficulty: quiz.difficulty || "intermediate",
       questions: quiz.questions,
       question_count: quiz.questions.length,
       status: "draft",
