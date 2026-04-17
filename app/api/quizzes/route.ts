@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     );
 
   if (mine) {
-    query = query.eq("author_id", ctx.userId);
+    query = query.eq("author_id", ctx.userId).neq("status", "archived");
   } else {
     query = query.eq("status", "published");
     if (excludeMine) {
