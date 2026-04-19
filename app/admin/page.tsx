@@ -33,6 +33,8 @@ export default function AdminHome() {
           <Link href="/admin/users" className="px-3 py-1 border border-[var(--border)] rounded">Users</Link>
           <Link href="/admin/quizzes" className="px-3 py-1 border border-[var(--border)] rounded">Quizzes</Link>
           <Link href="/admin/events" className="px-3 py-1 border border-[var(--border)] rounded">Events</Link>
+          <Link href="/admin/achievements" className="px-3 py-1 border border-[var(--border)] rounded">Achievements</Link>
+          <Link href="/admin/settings" className="px-3 py-1 border border-[var(--border)] rounded">Settings</Link>
           <a href="/api/admin/export" className="px-3 py-1 border border-[var(--border)] rounded">Export CSV</a>
         </div>
       </div>

@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/supabase";
 import { awardPoints, POINTS } from "@/lib/points";
+import { evaluateAfterPublish } from "@/lib/achievements";
 
-/**
- * POST /api/quizzes/:id/publish
- * Transitions a draft to published. Awards PUBLISH_QUIZ points (idempotent check).
- */
 export async function POST(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -34,7 +31,6 @@ export async function POST(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Award publish points only once per quiz (check point_events history)
   const { count } = await ctx.client
     .from("point_events")
     .select("id", { count: "exact", head: true })
@@ -51,5 +47,15 @@ export async function POST(
     });
   }
 
-  return NextResponse.json({ ok: true });
+  let newlyEarned: Awaited<ReturnType<typeof evaluateAfterPublish>> = [];
+  try {
+    newlyEarned = await evaluateAfterPublish(ctx.client, {
+      userId: existing.author_id,
+      quizId: id,
+    });
+  } catch (err) {
+    console.error("Achievement evaluation failed:", err);
+  }
+
+  return NextResponse.json({ ok: true, newlyEarned });
 }

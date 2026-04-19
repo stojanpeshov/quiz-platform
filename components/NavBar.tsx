@@ -15,6 +15,7 @@ export function NavBar({ session }: { session: Session }) {
       <Link href="/my/quizzes" className="hover:text-[var(--accent)]" onClick={() => setOpen(false)}>My quizzes</Link>
       <Link href="/leaderboards" className="hover:text-[var(--accent)]" onClick={() => setOpen(false)}>Leaderboards</Link>
       <Link href="/me" className="hover:text-[var(--accent)]" onClick={() => setOpen(false)}>My points</Link>
+      <Link href="/me/achievements" className="hover:text-[var(--accent)]" onClick={() => setOpen(false)}>Achievements</Link>
       {role === "admin" && (
         <Link href="/admin" className="hover:text-[var(--accent)] text-amber-400" onClick={() => setOpen(false)}>Admin</Link>
       )}
