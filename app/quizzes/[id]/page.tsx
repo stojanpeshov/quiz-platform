@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import AchievementToast from "@/components/AchievementToast";
 
 export default function QuizDetailPage() {
   const params = useParams<{ id: string }>();
@@ -13,6 +14,7 @@ export default function QuizDetailPage() {
   const [myAttempts, setMyAttempts] = useState(0);
   const [stars, setStars] = useState(0);
   const [msg, setMsg] = useState("");
+  const [newlyEarned, setNewlyEarned] = useState<any[]>([]);
 
   useEffect(() => {
     fetch(`/api/quizzes/${params.id}`).then((r) => r.json()).then((d) => {
@@ -33,12 +35,14 @@ export default function QuizDetailPage() {
     });
     const data = await res.json();
     setMsg(res.ok ? "Rating saved." : data.error ?? "Failed to rate");
+    if (res.ok && data.newlyEarned?.length) setNewlyEarned(data.newlyEarned);
   }
 
   if (!quiz) return <p className="text-[var(--muted)]">Loading…</p>;
 
   return (
     <div className="space-y-8">
+      <AchievementToast achievements={newlyEarned} onClose={() => setNewlyEarned([])} />
       <div>
         <div className="flex items-center gap-2 mb-2">
           <div className="text-xs text-[var(--muted)] uppercase">{quiz.status}</div>
