@@ -3,14 +3,8 @@ import { requireUser } from "@/lib/supabase";
 import { gradeQuiz, type Answer } from "@/lib/grading";
 import { awardPoints, hasEarned, POINTS } from "@/lib/points";
 import { QuizSchema } from "@/lib/schema";
+import { evaluateAfterAttempt } from "@/lib/achievements";
 
-/**
- * POST /api/quizzes/:id/take
- * Body: { answers: Answer[] }
- *
- * Validates quiz is published, user has < 3 attempts, grades, stores attempt,
- * awards points (completion + first-time 80/100 bonuses).
- */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -23,7 +17,6 @@ export async function POST(
   }
   const answers = body.answers as Answer[];
 
-  // Fetch quiz — must be published
   const { data: q } = await ctx.client
     .from("quizzes")
     .select("id, status, title, questions, author_id")
@@ -35,7 +28,6 @@ export async function POST(
     return NextResponse.json({ error: "Quiz is not takeable" }, { status: 409 });
   }
 
-  // Parse the stored quiz (already validated on import, but be defensive)
   const parsed = QuizSchema.safeParse({
     title: q.title,
     description: "",
@@ -47,7 +39,6 @@ export async function POST(
 
   const graded = gradeQuiz(parsed.data, answers);
 
-  // Insert attempt — trigger enforces 3-cap and sets attempt_number
   const { data: attempt, error: insErr } = await ctx.client
     .from("attempts")
     .insert({
@@ -57,20 +48,18 @@ export async function POST(
       correct_count: graded.correctCount,
       total_count: graded.totalCount,
       answers,
-      attempt_number: 1, // overwritten by trigger
+      attempt_number: 1,
     })
     .select("id, attempt_number")
     .single();
 
   if (insErr) {
-    // Trigger raises on cap breach
     const msg = insErr.message.includes("Attempt cap")
       ? "You have reached the 3-attempt limit for this quiz"
       : insErr.message;
     return NextResponse.json({ error: msg }, { status: 409 });
   }
 
-  // Award base completion points
   await awardPoints(ctx.client, {
     userId: ctx.userId,
     eventType: "complete_attempt",
@@ -80,7 +69,6 @@ export async function POST(
     refAttemptId: attempt!.id,
   });
 
-  // First-time 80% bonus
   if (graded.scorePct >= 80) {
     const already = await hasEarned(ctx.client, ctx.userId, "score_80_first", id);
     if (!already) {
@@ -95,7 +83,6 @@ export async function POST(
     }
   }
 
-  // First-time 100% bonus (additive on top of 80%)
   if (graded.scorePct === 100) {
     const already = await hasEarned(ctx.client, ctx.userId, "score_100_first", id);
     if (!already) {
@@ -110,7 +97,19 @@ export async function POST(
     }
   }
 
-  // Return the graded result + correct answers (always revealed per spec)
+  // Evaluate achievements — non-blocking, errors must not fail the response
+  let newlyEarned: Awaited<ReturnType<typeof evaluateAfterAttempt>> = [];
+  try {
+    newlyEarned = await evaluateAfterAttempt(ctx.client, {
+      userId: ctx.userId,
+      quizId: id,
+      attemptId: attempt!.id,
+      scorePct: graded.scorePct,
+    });
+  } catch (err) {
+    console.error("Achievement evaluation failed:", err);
+  }
+
   return NextResponse.json({
     attemptId: attempt!.id,
     attemptNumber: attempt!.attempt_number,
@@ -118,6 +117,7 @@ export async function POST(
     correctCount: graded.correctCount,
     totalCount: graded.totalCount,
     perQuestion: graded.perQuestion,
-    questions: parsed.data.questions, // full questions with answers for review
+    questions: parsed.data.questions,
+    newlyEarned,
   });
 }

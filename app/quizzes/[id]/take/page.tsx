@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import AchievementToast from "@/components/AchievementToast";
 
 type Question =
   | { type: "single_choice"; question: string; options: string[] }
@@ -16,6 +17,7 @@ export default function TakeQuizPage() {
   const [result, setResult] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [newlyEarned, setNewlyEarned] = useState<any[]>([]);
 
   useEffect(() => {
     fetch(`/api/quizzes/${params.id}`)
@@ -58,6 +60,7 @@ export default function TakeQuizPage() {
     setSubmitting(false);
     if (!res.ok) return setError(data.error ?? "Failed to submit");
     setResult(data);
+    if (data.newlyEarned?.length) setNewlyEarned(data.newlyEarned);
   }
 
   if (!quiz) return <p className="text-[var(--muted)]">Loading…</p>;
@@ -65,6 +68,7 @@ export default function TakeQuizPage() {
   if (result) {
     return (
       <div className="space-y-6">
+        <AchievementToast achievements={newlyEarned} onClose={() => setNewlyEarned([])} />
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
           <h1 className="text-2xl font-bold">Attempt {result.attemptNumber} / 3</h1>
           <p className="text-4xl font-bold mt-2">

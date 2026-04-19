@@ -2,10 +2,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import AchievementToast from "@/components/AchievementToast";
 
 export default function MyQuizzesPage() {
   const router = useRouter();
   const [quizzes, setQuizzes] = useState<any[]>([]);
+  const [newlyEarned, setNewlyEarned] = useState<any[]>([]);
 
   async function load() {
     const r = await fetch("/api/quizzes?mine=1");
@@ -16,7 +18,9 @@ export default function MyQuizzesPage() {
 
   async function publish(id: string) {
     const r = await fetch(`/api/quizzes/${id}/publish`, { method: "POST" });
-    if (!r.ok) { alert((await r.json()).error); return; }
+    const d = await r.json();
+    if (!r.ok) { alert(d.error); return; }
+    if (d.newlyEarned?.length) setNewlyEarned(d.newlyEarned);
     load();
   }
   async function unpublish(id: string) {
@@ -41,6 +45,7 @@ export default function MyQuizzesPage() {
 
   return (
     <div className="space-y-8">
+      <AchievementToast achievements={newlyEarned} onClose={() => setNewlyEarned([])} />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">My quizzes</h1>
         <Link href="/quizzes/new" className="bg-[var(--accent)] text-black font-semibold px-4 py-2 rounded">

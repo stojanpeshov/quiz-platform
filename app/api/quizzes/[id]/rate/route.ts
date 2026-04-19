@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/supabase";
 import { awardPoints, hasEarned, POINTS } from "@/lib/points";
+import { evaluateAfterRating } from "@/lib/achievements";
 
-/**
- * POST /api/quizzes/:id/rate
- * Body: { stars: 1..5 }
- *
- * Upserts the user's rating. Awards +1 only on first-ever rating of this quiz.
- * Cannot rate your own quiz.
- */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -35,7 +29,6 @@ export async function POST(
     return NextResponse.json({ error: "Cannot rate your own quiz" }, { status: 409 });
   }
 
-  // Require at least one attempt before rating — keeps ratings honest
   const { count: attemptCount } = await ctx.client
     .from("attempts")
     .select("id", { count: "exact", head: true })
@@ -53,7 +46,6 @@ export async function POST(
     );
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Award +1 only on first rating of this quiz
   const already = await hasEarned(ctx.client, ctx.userId, "rate_quiz", id);
   if (!already) {
     await awardPoints(ctx.client, {
@@ -65,5 +57,12 @@ export async function POST(
     });
   }
 
-  return NextResponse.json({ ok: true });
+  let newlyEarned: Awaited<ReturnType<typeof evaluateAfterRating>> = [];
+  try {
+    newlyEarned = await evaluateAfterRating(ctx.client, { userId: ctx.userId });
+  } catch (err) {
+    console.error("Achievement evaluation failed:", err);
+  }
+
+  return NextResponse.json({ ok: true, newlyEarned });
 }
