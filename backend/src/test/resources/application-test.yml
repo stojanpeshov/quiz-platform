@@ -1,0 +1,26 @@
+# Test profile — overrides for application.yml. Testcontainers provides the
+# live datasource at runtime, so all that's needed here is enough config to
+# satisfy @ConfigurationProperties bindings.
+quizplatform:
+  azure-ad:
+    tenant-id: 11111111-1111-1111-1111-111111111111
+    audience: api://test
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+  platform:
+    public-url: http://localhost:5173
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+  # Allow the test slice to override the production resource-server config.
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://login.microsoftonline.com/11111111-1111-1111-1111-111111111111/v2.0
