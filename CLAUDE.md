@@ -29,7 +29,6 @@ backend/   Spring Boot application (Maven)
 frontend/  Vite + React SPA (React Router v6, TanStack Query, MSAL.js)
 db/        Canonical SQL migrations (also copied to backend/src/main/resources/db/migration)
 docs/      Business rules, point system rules, quiz prompt template
-app/, components/, lib/, supabase/   Original Next.js + Supabase code — kept as reference until deleted
 ```
 
 ### Auth flow
