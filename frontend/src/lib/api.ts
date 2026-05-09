@@ -7,15 +7,22 @@ export async function apiFetch<T = unknown>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
-  const account = msalInstance.getActiveAccount() ?? msalInstance.getAllAccounts()[0];
   let token = "";
-  if (account) {
-    try {
-      const r = await msalInstance.acquireTokenSilent({ scopes: [apiScope], account });
-      token = r.accessToken;
-    } catch {
-      const r = await msalInstance.acquireTokenPopup({ scopes: [apiScope] });
-      token = r.accessToken;
+  if ((import.meta.env.VITE_E2E_MODE as string) === "true") {
+    // E2E mode: token is injected into localStorage by the Playwright test before
+    // each page load. This bypasses MSAL entirely so tests don't need a live
+    // Entra ID tenant.
+    token = localStorage.getItem("e2e_token") ?? "";
+  } else {
+    const account = msalInstance.getActiveAccount() ?? msalInstance.getAllAccounts()[0];
+    if (account) {
+      try {
+        const r = await msalInstance.acquireTokenSilent({ scopes: [apiScope], account });
+        token = r.accessToken;
+      } catch {
+        const r = await msalInstance.acquireTokenPopup({ scopes: [apiScope] });
+        token = r.accessToken;
+      }
     }
   }
 

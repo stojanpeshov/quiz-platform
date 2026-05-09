@@ -5,7 +5,9 @@
       "Bash(code:*)",
       "Bash(npm run dev:*)",
       "Bash(curl:*)",
-      "Bash(grep -r \"next\\\\|next-auth\\\\|@supabase\" /home/stojan/dev/quiz-platform --include=\"*.tsx\" --include=\"*.ts\" --include=\"*.jsx\" --include=\"*.js\" ! -path \"*/node_modules/*\" ! -path \"*/.next/*\" ! -path \"*/frontend/*\" ! -path \"*/backend/*\")"
+      "Bash(grep -r \"next\\\\|next-auth\\\\|@supabase\" /home/stojan/dev/quiz-platform --include=\"*.tsx\" --include=\"*.ts\" --include=\"*.jsx\" --include=\"*.js\" ! -path \"*/node_modules/*\" ! -path \"*/.next/*\" ! -path \"*/frontend/*\" ! -path \"*/backend/*\")",
+      "Bash(xargs cat *)",
+      "Bash(npx tsc *)"
     ]
   }
 }

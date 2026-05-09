@@ -7,13 +7,18 @@ import { apiScope } from "../lib/msal";
 // to /login and preserves the original destination. Replaces the
 // useSession()+redirect pattern from the Next.js pages.
 export function RequireAuth({ children }: { children: React.ReactNode }) {
-  const isAuthed = useIsAuthenticated();
+  const msalAuthed = useIsAuthenticated();
   const { instance, accounts } = useMsal();
   const loc = useLocation();
 
+  // E2E mode: skip MSAL and check for a test token injected by Playwright.
+  const isAuthed = (import.meta.env.VITE_E2E_MODE as string) === "true"
+    ? !!localStorage.getItem("e2e_token")
+    : msalAuthed;
+
   useEffect(() => {
-    if (isAuthed && accounts[0]) instance.setActiveAccount(accounts[0]);
-  }, [isAuthed, accounts, instance]);
+    if (msalAuthed && accounts[0]) instance.setActiveAccount(accounts[0]);
+  }, [msalAuthed, accounts, instance]);
 
   if (!isAuthed) {
     return <Navigate to={`/login?from=${encodeURIComponent(loc.pathname)}`} replace />;
