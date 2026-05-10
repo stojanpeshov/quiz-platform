@@ -45,7 +45,11 @@ public interface QuizRepository extends JpaRepository<Quiz, UUID> {
     // Mirrors refresh_quiz_aggregates() from the original Postgres function:
     // single UPDATE that recomputes avg_rating / rating_count / attempt_count /
     // unique_attempter_count from the source tables.
-    @Modifying
+    // flushAutomatically ensures pending entity changes (e.g. new Rating rows) are
+    // written to the DB before the subquery counts them; clearAutomatically evicts
+    // the stale Quiz entity from the session cache so subsequent reads see the
+    // updated values.
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = """
         update quizzes set
           avg_rating             = coalesce((select round(avg(stars)::numeric, 2) from ratings  where quiz_id = :id), 0),

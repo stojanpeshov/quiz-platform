@@ -1,9 +1,9 @@
 // Shapes returned by the .NET API. Kept manual instead of generated to stay
 // in sync with QuizPlatform.Application.Dtos by name; serializer camelCases.
 
-export type Role = "User" | "Admin";
-export type QuizStatus = "Draft" | "Published" | "Archived";
-export type Difficulty = "Beginner" | "Intermediate" | "Advanced";
+export type Role = "user" | "admin";
+export type QuizStatus = "draft" | "published" | "archived";
+export type Difficulty = "beginner" | "intermediate" | "advanced";
 
 export interface QuizSummary {
   id: string;

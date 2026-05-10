@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { randomUUID } from "crypto";
 
 // Must stay in sync with E2eJwtConfig.SECRET in the backend.
 const SECRET = "e2e-test-secret-key-must-32-chrs";
@@ -17,6 +18,16 @@ export const CHARLIE: TestUser = {
   email: "charlie@e2e.test",
   name: "Charlie Admin",
 };
+
+/**
+ * Create a test user with a fresh UUID for both OID and email so that
+ * every test run inserts a brand-new row, avoiding the users.email unique
+ * constraint violation that occurs when the same email is reused across runs.
+ */
+export function freshUser(displayName: string): TestUser {
+  const oid = randomUUID();
+  return { oid, email: `${oid}@e2e.test`, name: displayName };
+}
 
 export function signToken(user: TestUser): string {
   return jwt.sign(

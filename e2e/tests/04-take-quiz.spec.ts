@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { randomUUID } from "crypto";
-import { loginAs } from "../helpers/jwt";
+import { freshUser, loginAs } from "../helpers/jwt";
 import { ApiClient, ALL_TYPES_QUIZ } from "../helpers/api";
 
-const AUTHOR = { oid: randomUUID(), email: "take-author@e2e.test", name: "Take Author" };
-const TAKER = { oid: randomUUID(), email: "take-taker@e2e.test", name: "Take Taker" };
+const AUTHOR = freshUser("Take Author");
+const TAKER = freshUser("Take Taker");
 const authorApi = new ApiClient(AUTHOR);
+const takerApi = new ApiClient(TAKER);
 
 let quizId: string;
 
@@ -88,35 +88,50 @@ test("scoring 100% shows attempt number and 100% score", async ({ page }) => {
 });
 
 test("short_text answer matches case-insensitively", async ({ page }) => {
-  await loginAs(page, TAKER);
+  // Use a fresh user so this test is not affected by the 3-attempt cap on TAKER.
+  const caseUser = freshUser("Case User");
+  await loginAs(page, caseUser);
   await page.goto(`/quizzes/${quizId}/take`);
 
-  // Answer Q1-Q3 incorrectly to focus on Q4.
+  // Fill all questions; only Q4 tests case-insensitive matching.
+  const q1 = page.locator("div.space-y-2").filter({ hasText: "Pick option B" });
+  await q1.locator("label", { hasText: "Option B" }).locator("input[type=radio]").click();
+  const q2 = page.locator("div.space-y-2").filter({ hasText: "Pick A and C" });
+  await q2.locator("label", { hasText: "Option A" }).locator("input[type=checkbox]").check();
+  await q2.locator("label", { hasText: "Option C" }).locator("input[type=checkbox]").check();
+  const q3 = page.locator("div.space-y-2").filter({ hasText: "Is this a true/false question?" });
+  await q3.locator("label", { hasText: "True" }).locator("input[type=radio]").click();
+
+  // Q4 uses upper-case with extra spaces — the backend normalises before comparing.
   const q4 = page.locator("div.space-y-2").filter({ hasText: "Type the word" });
-  await q4.locator("input[type=text]").fill("  HELLO  "); // upper-case with spaces
+  await q4.locator("input[type=text]").fill("  HELLO  ");
 
   await page.getByRole("button", { name: "Submit" }).click();
 
   // Q4 should be marked correct despite case/whitespace difference.
-  const feedback = page.locator("div.space-y-2").filter({ hasText: "Type the word" })
+  const feedback = page.locator("div.space-y-2")
+    .filter({ hasText: "Type the word" })
     .locator(".text-sm.pt-2");
   await expect(feedback).toContainText("✓ Correct");
 });
 
 test("taking the same quiz a second time is allowed", async ({ page }) => {
-  const takerApi = new ApiClient(TAKER);
+  // Use a fresh user to avoid the 3-attempt cap accumulated by TAKER in prior tests.
+  const repeatUser = freshUser("Repeat User");
+  const repeatApi = new ApiClient(repeatUser);
+
   // First attempt via API.
-  await takerApi.takeQuiz(quizId, [
+  await repeatApi.takeQuiz(quizId, [
     { type: "single_choice", value: 0 },
     { type: "multiple_choice", value: [0] },
     { type: "true_false", value: false },
     { type: "short_text", value: "wrong" },
   ]);
 
-  await loginAs(page, TAKER);
+  await loginAs(page, repeatUser);
   await page.goto(`/quizzes/${quizId}/take`);
 
-  // Should render the quiz (no 409 block).
+  // The take page should render for a second attempt (not blocked).
   await expect(page.getByRole("heading", { name: ALL_TYPES_QUIZ.title })).toBeVisible();
   await expect(page.getByRole("button", { name: "Submit" })).toBeVisible();
 });

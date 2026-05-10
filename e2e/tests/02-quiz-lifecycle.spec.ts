@@ -1,13 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { randomUUID } from "crypto";
-import { loginAs } from "../helpers/jwt";
+import { freshUser, loginAs } from "../helpers/jwt";
 import { ApiClient, TRUE_FALSE_QUIZ } from "../helpers/api";
 
-const USER = {
-  oid: randomUUID(),
-  email: "lifecycle-user@e2e.test",
-  name: "Lifecycle User",
-};
+const USER = freshUser("Lifecycle User");
 const api = new ApiClient(USER);
 
 test("create a new draft quiz via the JSON editor", async ({ page }) => {
@@ -38,8 +33,10 @@ test("edit a draft quiz and save", async ({ page }) => {
   await page.goto(`/my/quizzes/${id}/edit`);
   await expect(page.getByRole("heading", { name: "Edit draft" })).toBeVisible();
 
-  // Modify the title in the textarea.
+  // Wait for the textarea to be populated from the GET /api/quizzes/:id response
+  // before reading its content; the heading renders before the API call resolves.
   const textarea = page.locator("textarea");
+  await expect(textarea).not.toHaveValue("");
   const current = await textarea.inputValue();
   const updated = current.replace('"title": "E2E True/False Quiz"', '"title": "Updated Quiz Title"');
   await textarea.fill(updated);
@@ -69,11 +66,11 @@ test("publish a draft quiz — quiz appears in the list as Published", async ({ 
 });
 
 test("publishing awards +20 points and shows the Knowledge Sharer achievement toast", async ({ page }) => {
-  const freshUser = { oid: randomUUID(), email: "pub-ach@e2e.test", name: "Pub Ach" };
-  const freshApi = new ApiClient(freshUser);
-  const id = await freshApi.createQuiz(TRUE_FALSE_QUIZ);
+  const pubUser = freshUser("Pub Ach User");
+  const pubApi = new ApiClient(pubUser);
+  const id = await pubApi.createQuiz(TRUE_FALSE_QUIZ);
 
-  await loginAs(page, freshUser);
+  await loginAs(page, pubUser);
   await page.goto("/my/quizzes");
 
   const row = page.locator("li").filter({ hasText: TRUE_FALSE_QUIZ.title });
@@ -82,11 +79,11 @@ test("publishing awards +20 points and shows the Knowledge Sharer achievement to
   // Achievement toast appears immediately.
   await expect(page.getByText(/Achievement unlocked: Knowledge Sharer/)).toBeVisible();
 
-  // Points increased by 20.
+  // Points increased by 20 (+20 publish event visible in the list).
   await page.goto("/me/points");
-  await expect(page.getByText("20")).toBeVisible();
+  await expect(page.getByText("+20")).toBeVisible();
 
-  await freshApi.deleteQuiz(id);
+  await pubApi.deleteQuiz(id);
 });
 
 test("Unpublish & Edit archives the quiz and creates a new draft", async ({ page }) => {

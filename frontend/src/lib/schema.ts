@@ -9,7 +9,7 @@ const SingleChoiceQuestion = z.object({
   question: z.string().min(3).max(1000),
   options: z.array(z.string().min(1).max(500)).min(2).max(6),
   correctAnswer: z.number().int().nonnegative(),
-  explanation: z.string().max(1000).optional(),
+  explanation: z.string().max(1000).nullish(),
 }).refine(
   (q) => q.correctAnswer < q.options.length,
   { message: "correctAnswer index out of range", path: ["correctAnswer"] },
@@ -20,7 +20,7 @@ const MultipleChoiceQuestion = z.object({
   question: z.string().min(3).max(1000),
   options: z.array(z.string().min(1).max(500)).min(2).max(6),
   correctAnswers: z.array(z.number().int().nonnegative()).min(1),
-  explanation: z.string().max(1000).optional(),
+  explanation: z.string().max(1000).nullish(),
 }).refine(
   (q) => q.correctAnswers.every((i) => i < q.options.length),
   { message: "correctAnswers index out of range", path: ["correctAnswers"] },
@@ -33,14 +33,14 @@ const TrueFalseQuestion = z.object({
   type: z.literal("true_false"),
   question: z.string().min(3).max(1000),
   correctAnswer: z.boolean(),
-  explanation: z.string().max(1000).optional(),
+  explanation: z.string().max(1000).nullish(),
 });
 
 const ShortTextQuestion = z.object({
   type: z.literal("short_text"),
   question: z.string().min(3).max(1000),
   correctAnswer: z.string().min(1).max(200),
-  explanation: z.string().max(1000).optional(),
+  explanation: z.string().max(1000).nullish(),
 });
 
 export const QuestionSchema = z.discriminatedUnion("type", [

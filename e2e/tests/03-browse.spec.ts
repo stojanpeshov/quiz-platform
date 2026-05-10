@@ -1,10 +1,9 @@
 import { test, expect } from "@playwright/test";
-import { randomUUID } from "crypto";
-import { loginAs } from "../helpers/jwt";
+import { freshUser, loginAs } from "../helpers/jwt";
 import { ApiClient, TRUE_FALSE_QUIZ } from "../helpers/api";
 
-const AUTHOR = { oid: randomUUID(), email: "browse-author@e2e.test", name: "Browse Author" };
-const VIEWER = { oid: randomUUID(), email: "browse-viewer@e2e.test", name: "Browse Viewer" };
+const AUTHOR = freshUser("Browse Author");
+const VIEWER = freshUser("Browse Viewer");
 const authorApi = new ApiClient(AUTHOR);
 
 let quizId: string;

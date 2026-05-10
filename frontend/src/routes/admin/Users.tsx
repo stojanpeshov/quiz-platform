@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { apiFetch } from "../../lib/api";
 
-interface U { id: string; email: string; name: string; role: "User" | "Admin"; totalPoints: number }
+interface U { id: string; email: string; name: string; role: "user" | "admin"; totalPoints: number }
 
 export function AdminUsers() {
   const qc = useQueryClient();
@@ -12,7 +12,7 @@ export function AdminUsers() {
     queryFn: () => apiFetch(`/api/admin/users?q=${encodeURIComponent(q)}`),
   });
   const setRole = useMutation({
-    mutationFn: ({ id, role }: { id: string; role: "User" | "Admin" }) =>
+    mutationFn: ({ id, role }: { id: string; role: "user" | "admin" }) =>
       apiFetch(`/api/admin/users/${id}`, { method: "PATCH", body: JSON.stringify({ role }) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "users"] }),
   });
@@ -33,10 +33,10 @@ export function AdminUsers() {
             <span>{u.name} ({u.email}) — {u.totalPoints} pts</span>
             <select
               value={u.role}
-              onChange={(e) => setRole.mutate({ id: u.id, role: e.target.value as "User" | "Admin" })}
+              onChange={(e) => setRole.mutate({ id: u.id, role: e.target.value as "user" | "admin" })}
               style={{ background: "var(--bg)", color: "var(--fg)" }}>
-              <option value="User">User</option>
-              <option value="Admin">Admin</option>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
             </select>
           </li>
         ))}

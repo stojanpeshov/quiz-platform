@@ -1,10 +1,9 @@
 import { test, expect } from "@playwright/test";
-import { randomUUID } from "crypto";
-import { loginAs } from "../helpers/jwt";
+import { freshUser, loginAs } from "../helpers/jwt";
 import { ApiClient, TRUE_FALSE_QUIZ, TRUE_FALSE_CORRECT_ANSWER } from "../helpers/api";
 
-const USER = { oid: randomUUID(), email: "points-user@e2e.test", name: "Points User" };
-const QUIZ_AUTHOR = { oid: randomUUID(), email: "points-author@e2e.test", name: "Points Author" };
+const USER = freshUser("Points User");
+const QUIZ_AUTHOR = freshUser("Points Author");
 const userApi = new ApiClient(USER);
 const authorApi = new ApiClient(QUIZ_AUTHOR);
 
@@ -12,6 +11,8 @@ let quizId: string;
 
 test.beforeAll(async () => {
   quizId = await authorApi.createAndPublishQuiz(TRUE_FALSE_QUIZ);
+  // USER takes the quiz once (100% score) in beforeAll so all point tests see events.
+  await userApi.takeQuiz(quizId, TRUE_FALSE_CORRECT_ANSWER);
 });
 
 test.afterAll(async () => {
@@ -19,8 +20,6 @@ test.afterAll(async () => {
 });
 
 test("completing an attempt adds +5 to the point history", async ({ page }) => {
-  await userApi.takeQuiz(quizId, TRUE_FALSE_CORRECT_ANSWER);
-
   await loginAs(page, USER);
   await page.goto("/me/points");
 
@@ -29,7 +28,6 @@ test("completing an attempt adds +5 to the point history", async ({ page }) => {
 });
 
 test("scoring 100% shows +10 and +15 bonus events in point history", async ({ page }) => {
-  // The beforeAll already took the quiz with a correct answer.
   await loginAs(page, USER);
   await page.goto("/me/points");
 
@@ -51,20 +49,20 @@ test("total points displayed on My Points page matches the sum of events", async
 });
 
 test("publishing a quiz adds a +20 publish_quiz event", async ({ page }) => {
-  const freshUser = { oid: randomUUID(), email: "pub-points@e2e.test", name: "Pub Points" };
-  const freshApi = new ApiClient(freshUser);
-  const id = await freshApi.createAndPublishQuiz(TRUE_FALSE_QUIZ);
+  const pubUser = freshUser("Pub Points User");
+  const pubApi = new ApiClient(pubUser);
+  const id = await pubApi.createAndPublishQuiz(TRUE_FALSE_QUIZ);
 
-  await loginAs(page, freshUser);
+  await loginAs(page, pubUser);
   await page.goto("/me/points");
 
   await expect(page.getByText("+20").first()).toBeVisible();
 
-  await freshApi.deleteQuiz(id);
+  await pubApi.deleteQuiz(id);
 });
 
 test("rating a quiz adds a +1 rate_quiz event", async ({ page }) => {
-  const raterUser = { oid: randomUUID(), email: "rate-pts@e2e.test", name: "Rate Pts" };
+  const raterUser = freshUser("Rate Pts User");
   const raterApi = new ApiClient(raterUser);
   await raterApi.takeQuiz(quizId, TRUE_FALSE_CORRECT_ANSWER);
   await raterApi.rateQuiz(quizId, 4);

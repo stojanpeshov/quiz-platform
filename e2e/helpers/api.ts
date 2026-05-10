@@ -1,6 +1,6 @@
 import { signToken, type TestUser } from "./jwt";
 
-const BASE = "http://localhost:8080";
+const BASE = "http://localhost:8081";
 
 // Direct Node.js API client for test data setup (creates/deletes quizzes,
 // submits attempts, etc.) without going through the browser. Uses the same
@@ -90,7 +90,7 @@ export class ApiClient {
     return this.req("GET", "/api/admin/users");
   }
 
-  async setUserRole(userId: string, role: "User" | "Admin"): Promise<void> {
+  async setUserRole(userId: string, role: "user" | "admin"): Promise<void> {
     await this.req("PATCH", `/api/admin/users/${userId}`, { role });
   }
 }

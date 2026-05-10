@@ -1,13 +1,14 @@
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
+import { InteractionStatus } from "@azure/msal-browser";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { apiScope } from "../lib/msal";
 
 export function LoginPage() {
-  const { instance } = useMsal();
+  const { instance, inProgress } = useMsal();
   const isAuthed = useIsAuthenticated();
   const [params] = useSearchParams();
   const from = params.get("from") ?? "/";
-  if (isAuthed) return <Navigate to={from} replace />;
+  if (inProgress === InteractionStatus.None && isAuthed) return <Navigate to={from} replace />;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">

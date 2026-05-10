@@ -1,10 +1,9 @@
 import { test, expect } from "@playwright/test";
-import { randomUUID } from "crypto";
-import { loginAs, CHARLIE } from "../helpers/jwt";
+import { freshUser, loginAs, CHARLIE } from "../helpers/jwt";
 import { ApiClient, TRUE_FALSE_QUIZ } from "../helpers/api";
 
 const adminApi = new ApiClient(CHARLIE);
-const SUBJECT = { oid: randomUUID(), email: "admin-subject@e2e.test", name: "Admin Subject" };
+const SUBJECT = freshUser("Admin Subject");
 const subjectApi = new ApiClient(SUBJECT);
 
 test.beforeAll(async () => {
@@ -17,17 +16,24 @@ test("admin dashboard shows platform stats", async ({ page }) => {
   await page.goto("/admin");
 
   await expect(page.getByRole("heading", { name: "Admin" })).toBeVisible();
-  await expect(page.getByText("Users")).toBeVisible();
-  await expect(page.getByText("Quizzes")).toBeVisible();
-  await expect(page.getByText("Attempts")).toBeVisible();
+  // Wait for stats data to load (the page shows Loading… until data arrives)
+  await expect(page.locator(".text-2xl.font-bold").first()).toBeVisible();
+  // Stat labels live inside the grid, separate from nav links and headings
+  const grid = page.locator(".grid.grid-cols-2");
+  await expect(grid.getByText("Users", { exact: true })).toBeVisible();
+  await expect(grid.getByText("Quizzes", { exact: true })).toBeVisible();
+  await expect(grid.getByText("Attempts", { exact: true })).toBeVisible();
 });
 
 test("admin dashboard stat cards show numeric values", async ({ page }) => {
   await loginAs(page, CHARLIE);
   await page.goto("/admin");
 
-  // Each stat card has a large numeric value.
-  const stats = await page.locator(".text-2xl.font-bold").all();
+  // Wait for stats to load before counting; scope to the grid so the "Admin"
+  // h1 heading (also text-2xl font-bold) is not included.
+  const grid = page.locator(".grid.grid-cols-2");
+  await expect(grid.locator(".text-2xl.font-bold").first()).toBeVisible();
+  const stats = await grid.locator(".text-2xl.font-bold").all();
   expect(stats.length).toBeGreaterThanOrEqual(4);
   for (const stat of stats) {
     const text = await stat.textContent();
@@ -39,41 +45,42 @@ test("admin can search users by email", async ({ page }) => {
   await loginAs(page, CHARLIE);
   await page.goto("/admin/users");
 
-  await page.getByPlaceholder("Search email or name").fill("admin-subject@e2e.test");
-  await expect(page.getByText("Admin Subject")).toBeVisible();
+  // Search by email (UUID-derived, unique per run) to avoid matching accumulated users
+  await page.getByPlaceholder("Search email or name").fill(SUBJECT.email);
+  await expect(page.getByText(SUBJECT.email)).toBeVisible();
 });
 
 test("admin can promote a user to admin role", async ({ page }) => {
   await loginAs(page, CHARLIE);
   await page.goto("/admin/users");
 
-  await page.getByPlaceholder("Search email or name").fill("admin-subject@e2e.test");
+  await page.getByPlaceholder("Search email or name").fill(SUBJECT.email);
 
-  const row = page.locator("li").filter({ hasText: "Admin Subject" });
+  const row = page.locator("li").filter({ hasText: SUBJECT.email }).first();
   const select = row.locator("select");
   await select.selectOption("Admin");
 
-  // No error shown and user now shows Admin role.
+  // No error shown.
   await expect(page.locator(".text-red-400")).not.toBeVisible();
 
-  // Reset back to User.
+  // Reset back to user.
   const { users } = await adminApi.listAdminUsers();
   const subject = users.find((u) => u.email === SUBJECT.email);
-  if (subject) await adminApi.setUserRole(subject.id, "User");
+  if (subject) await adminApi.setUserRole(subject.id, "user");
 });
 
 test("admin can demote an admin back to user role", async ({ page }) => {
   // Promote subject via API first.
   const { users } = await adminApi.listAdminUsers();
   const subject = users.find((u) => u.email === SUBJECT.email);
-  if (subject) await adminApi.setUserRole(subject.id, "Admin");
+  if (subject) await adminApi.setUserRole(subject.id, "admin");
 
   await loginAs(page, CHARLIE);
   await page.goto("/admin/users");
 
-  await page.getByPlaceholder("Search email or name").fill("admin-subject@e2e.test");
+  await page.getByPlaceholder("Search email or name").fill(SUBJECT.email);
 
-  const row = page.locator("li").filter({ hasText: "Admin Subject" });
+  const row = page.locator("li").filter({ hasText: SUBJECT.email }).first();
   await row.locator("select").selectOption("User");
 
   await expect(page.locator(".text-red-400")).not.toBeVisible();

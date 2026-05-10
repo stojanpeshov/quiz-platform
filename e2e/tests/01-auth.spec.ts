@@ -1,12 +1,7 @@
 import { test, expect } from "@playwright/test";
-import { randomUUID } from "crypto";
-import { loginAs } from "../helpers/jwt";
+import { freshUser, loginAs } from "../helpers/jwt";
 
-const USER = {
-  oid: randomUUID(),
-  email: "auth-user@e2e.test",
-  name: "Auth User",
-};
+const USER = freshUser("Auth User");
 
 test("unauthenticated user is redirected to /login", async ({ page }) => {
   // No token in localStorage — RequireAuth should redirect.

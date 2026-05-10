@@ -48,7 +48,7 @@ export function MyQuizzes() {
               <div className="text-sm" style={{ color: "var(--muted)" }}>{q.status} · {q.questionCount} q</div>
             </Link>
             <div className="flex gap-2 text-sm">
-              {q.status === "Draft" && (
+              {q.status === "draft" && (
                 <>
                   <Link to={`/my/quizzes/${q.id}/edit`} className="px-2 py-1 rounded border">Edit</Link>
                   <button onClick={() => publish.mutate(q.id)} className="px-2 py-1 rounded"
@@ -58,7 +58,7 @@ export function MyQuizzes() {
                   <button onClick={() => del.mutate(q.id)} className="px-2 py-1 rounded border">Delete</button>
                 </>
               )}
-              {q.status === "Published" && (
+              {q.status === "published" && (
                 <button onClick={() => unpublish.mutate(q.id)} className="px-2 py-1 rounded border">
                   Unpublish & edit
                 </button>
