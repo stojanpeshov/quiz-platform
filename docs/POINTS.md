@@ -53,4 +53,4 @@ Owner + top-performer bonuses depend on leaderboard state that changes as others
 
 ## Tuning
 
-All point values are constants in `lib/points.ts` and `supabase/migrations/003_functions.sql`. Change them, run the migration fragment, and next night's recompute will re-level everyone.
+All point values are constants in `backend/src/main/java/com/quizplatform/application/service/PointsService.java`. Change them and next night's recompute will re-level everyone.

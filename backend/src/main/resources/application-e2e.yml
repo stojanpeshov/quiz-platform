@@ -1,0 +1,25 @@
+quizplatform:
+  azure-ad:
+    # Matches the `tid` claim injected by e2e/helpers/jwt.ts.
+    tenant-id: e2e00000-0000-0000-0000-000000000000
+    audience: e2e-audience
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+      - http://localhost:5174
+  platform:
+    public-url: http://localhost:5173
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/quiz_platform_e2e
+    username: postgres
+    password: postgres
+  flyway:
+    # db/e2e contains the admin seed migration (V9900).
+    locations: classpath:db/migration,classpath:db/e2e
+
+logging:
+  level:
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN

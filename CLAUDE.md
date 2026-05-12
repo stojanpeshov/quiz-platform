@@ -5,50 +5,78 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev        # Start dev server
-npm run build      # Production build
-npm run lint       # ESLint
-npm run typecheck  # tsc --noEmit (no test suite exists)
+# Backend (from /backend)
+mvn spring-boot:run     # Start Spring Boot API on :8080
+mvn clean compile       # Compile
+mvn test                # Unit tests (integration tests need Docker)
+mvn -DskipTests package # Build runnable jar
+
+# Frontend (from /frontend)
+npm run dev             # Start Vite dev server on :5173 (proxies /api → :8080)
+npm run build           # Production build
+npm run lint            # ESLint
+npm run typecheck       # tsc --noEmit
 ```
 
 ## Architecture
 
-**Stack:** Next.js App Router + TypeScript, NextAuth.js (Microsoft Entra ID), Supabase (Postgres + RLS), Tailwind CSS, Zod, React Hook Form.
+**Stack:** Spring Boot 3 / Java 21 backend, Vite + React 18 frontend, PostgreSQL 16 with Flyway migrations, Microsoft Entra ID (single-tenant) for auth.
 
-**No ORM** — all DB access is via Supabase's PostgREST client (`@supabase/supabase-js`).
+**Monorepo layout:**
+
+```
+backend/   Spring Boot application (Maven)
+frontend/  Vite + React SPA (React Router v6, TanStack Query, MSAL.js)
+db/        Canonical SQL migrations (also copied to backend/src/main/resources/db/migration)
+docs/      Business rules, point system rules, quiz prompt template
+```
 
 ### Auth flow
 
-NextAuth with Azure AD (single-tenant, `tid` claim enforced in `signIn` callback). The JWT carries `user_id` and `role`. Helper functions `requireUser()` / `requireAdmin()` in API routes extract these and return a `UserCtx` containing the Supabase service-role client pre-configured with RLS context via `set_current_user(user_id, role)`.
+Two Entra ID app registrations: an **API** app (exposes `access_as_user` scope) and a **SPA** app (public client). The frontend uses MSAL.js to acquire a bearer token for the API scope. The backend validates JWTs via `spring-boot-starter-oauth2-resource-server`. `JwtToUserContextFilter` enforces the tenant lock on the `tid` claim, upserts the `users` row by `azure_oid`, and populates a request-scoped `UserContext` bean. All service methods receive a `UserContext` which carries the authenticated user's ID and role.
 
-All DB queries go through `UserCtx.client` so Postgres RLS policies apply.
+**No Postgres RLS.** Authorization is enforced at the application layer — every mutation's first action is an ownership / admin check.
 
 ### Data model
 
-Five main tables: `users`, `quizzes`, `attempts`, `ratings`, `point_events`.
+Eight tables: `users`, `quizzes`, `attempts`, `ratings`, `point_events`, `achievements`, `user_achievements`, `platform_settings`.
 
-- `quizzes.questions` is JSONB, validated by the Zod schema in `lib/schema.ts` — this is the single source of truth for question structure.
-- `quizzes.status` is an enum: `draft` → `published` → `archived`. Publishing is irreversible (edit creates a new draft linked via `parent_quiz_id`).
-- `attempts` are capped at 3 per user per quiz, enforced by a DB trigger.
-- `point_events` is append-only; `users.total_points` is a cache kept in sync by DB functions.
+- `quizzes.questions` is JSONB; `List<Question>` mapped via Hibernate 6 `@JdbcTypeCode(SqlTypes.JSON)` + Jackson `@JsonTypeInfo`/`@JsonSubTypes`.
+- `quizzes.status`: `draft → published → archived`. Publishing is irreversible; "Unpublish & Edit" archives the current row and creates a new draft linked via `parent_quiz_id`.
+- `attempts` are capped at 3 per user per quiz (`SELECT … FOR UPDATE` check in `AttemptService`).
+- `point_events` is append-only; `users.total_points` is a cache kept in sync by `PointsService`.
 
-### Point system
+### Backend service map
 
-Points are awarded in two layers:
-1. **Immediate** (API routes): base points for publishing, completing, rating.
-2. **Nightly** (pg_cron at 02:00 UTC): owner bonuses + top-performer bonuses recalculated as delta events. See `docs/POINTS.md` for rules and `lib/points.ts` for constants.
+| Service | Responsibility |
+|---|---|
+| `AttemptService` | Enforce 3-attempt cap, grade quiz, record attempt |
+| `GradingService` | Grade all four question types |
+| `PointsService` | Award immediate points, check "already earned" |
+| `QuizService` | CRUD, publish/unpublish lifecycle |
+| `QuizAggregatesService` | Keep `avg_rating`, `rating_count`, `attempt_count` in sync |
+| `RatingService` | Upsert ratings; enforce attempt-before-rate rule |
+| `AchievementService` | Real-time evaluation (score_threshold, completion_count, publish_count, points_milestone) |
+| `NightlyAchievementJob` | 02:05 UTC — evaluate score_top_n, rating_top_n, quiz_attempt_count, quiz_avg_rating |
+| `BonusRecomputeJob` | 02:00 UTC — recompute owner quality/popularity + top-performer bonuses as delta events |
+| `LeaderboardService` | Four leaderboard views; per-quiz uses `per_quiz_leaderboard(uuid)` SQL function |
+| `TeamsService` | Post Adaptive Card to Teams webhook (errors are non-fatal) |
+| `AdminService` | Stats, user management, audit log, CSV export |
 
 ### API conventions
 
-All routes follow the same pattern:
-1. Call `requireUser()` or `requireAdmin()` at the top.
-2. Do application-level auth checks (ownership, attempt limits).
-3. Use `ctx.client` for DB queries — RLS provides the final enforcement layer.
+1. Controllers call `userContext.requireUser()` or `userContext.requireAdmin()` at the top.
+2. Services do ownership / business-rule checks before any mutation.
+3. `AppException` subclasses map to typed HTTP errors via `GlobalExceptionHandler`.
 
 ### Quiz question types
 
-Four types defined in `lib/schema.ts`: `single_choice`, `multiple_choice`, `true_false`, `short_text`. Grading logic lives in `lib/grading.ts`. Correct answers are stripped before the quiz is sent to a taker (`stripAnswers()` in schema.ts). Short-text answers are normalized (lowercase, trim, collapse whitespace) before comparison.
+Four types: `single_choice`, `multiple_choice`, `true_false`, `short_text`. See `docs/BUSINESS_RULES.md` for grading rules and validation constraints. Short-text answers are normalized (lowercase, trim, collapse whitespace) before comparison.
+
+### Point and achievement systems
+
+See `docs/POINTS.md` for point values and bonus rules. See `docs/BUSINESS_RULES.md` for the full achievement condition-type catalogue and real-time vs. nightly split.
 
 ### Roles
 
-Two roles: `user` (default) and `admin`. Admins access `/admin/*` routes and API endpoints at `/api/admin/*`. Role is stored in `users.role` and propagated through NextAuth JWT into every request.
+Two roles: `user` (default) and `admin`. Role is stored in `users.role` and read from the JWT claims on every request. Admins access `/admin/*` routes and `/api/admin/*` endpoints.

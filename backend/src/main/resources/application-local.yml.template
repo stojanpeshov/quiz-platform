@@ -1,0 +1,18 @@
+# Local-dev profile. Copy to `application-local.yml` and fill in the GUIDs.
+# Activate with `mvn spring-boot:run -Dspring-boot.run.profiles=local`.
+# `application-local.yml` is gitignored; the .template file is committed.
+quizplatform:
+  azure-ad:
+    tenant-id: REPLACE_WITH_TENANT_ID
+    audience: api://REPLACE_WITH_API_CLIENT_ID
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+  platform:
+    public-url: http://localhost:5173
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/quiz_platform
+    username: postgres
+    password: postgres

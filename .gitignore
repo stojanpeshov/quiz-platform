@@ -1,8 +1,19 @@
 node_modules
-.next
-.env.local
-.env
-.vercel
 *.log
 .DS_Store
-.env.vercel
+test-results/
+
+# Java / Maven
+/backend/target/
+/backend/src/main/resources/application-local.yml
+*.class
+hs_err_pid*.log
+
+# Vite
+/frontend/dist
+
+# IDE
+.vscode/
+.idea/
+*.iml
+frontend/.env
