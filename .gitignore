@@ -1,11 +1,7 @@
 node_modules
-.next
-.env.local
-.env
-.vercel
 *.log
 .DS_Store
-.env.vercel
+test-results/
 
 # Java / Maven
 /backend/target/
@@ -20,3 +16,4 @@ hs_err_pid*.log
 .vscode/
 .idea/
 *.iml
+frontend/.env
